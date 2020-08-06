@@ -1,34 +1,6 @@
 This repository currently implemented the CPM and Hourglass model using TensorFlow. Instead of normal convolution, inverted residuals (also known as Mobilenet V2) module has been used inside the model for **real-time** inference. 
 
 
-<table>
-
-  <tr>
-    <td>Model</td>
-    <td>FLOPs</td>
-    <td>PCKh</td>
-    <td>Inference Time</td>
-  </tr>
-
-  <tr>
-	<td>CPM</td>
-	<td>0.5G</td>
-	<td>93.78</td>
-	<td rowspan="2">
-	~60 FPS on Snapdragon 845 <br/>
-	~60 FPS on iPhone XS (need more test)
-	</td>
-  </tr>
-
-  <tr>
-	<td>Hourglass</td>
-	<td>0.5G</td>
-	<td>91.81</td>
-  </tr>
-</table>
-
-> You can modify the [architectures](https://github.com/edvardHua/PoseEstimationForMobile/tree/master/training/src) of network for training much higher PCKh model.
-
 **Note: The repository only provide the baseline for mobile inference. Both model architectures (accuracy) and dataset still have a huge margin of improvement.**
 
 
@@ -53,8 +25,6 @@ You can download the apk as below to test on your device.
 | [PoseEstimation-Mace.apk](https://raw.githubusercontent.com/edvardHua/PoseEstimationForMobile/master/release/PoseEstimation-Mace.apk) | [PoseEstimation-TFlite.apk](https://raw.githubusercontent.com/edvardHua/PoseEstimationForMobile/master/release/PoseEstimation-TFlite.apk) |
 
 
-> Issue and PR are welcome when you come across any problem.
-
 ## Training
 
 ***
@@ -67,24 +37,10 @@ You can download the apk as below to test on your device.
 
 ### Dataset:
 
-Training dataset available through [google driver](https://drive.google.com/open?id=1zahjQWhuKIYWRRI2ZlHzn65Ug_jIiC4l).
-
-Unzip it will obtain the following file structure
-
-```bash
-# root @ ubuntu in ~/hdd/ai_challenger
-$ tree -L 1 .
-.
-├── ai_challenger_train.json
-├── ai_challenger_valid.json
-├── train
-└── valid
-```
-
-The traing dataset only contains single person images and it come from the competition of [AI Challenger](https://challenger.ai/datasets/keypoint). 
-
-* 22446 training examples
-* 1500 testing examples
+Training dataset (Images and Annotations) paths should be updated in the following files:
+* training/experiments/mv2_cpm.cfg
+* training/experiments/mv2_hourglass.cfg
+* training/src/dataset.py
 
 I transfer the annotation into COCO format for using the data augument code from [tf-pose-estimation](https://github.com/ildoonet/tf-pose-estimation) respository.
 
@@ -92,30 +48,31 @@ I transfer the annotation into COCO format for using the data augument code from
 
 In training procedure, we use `cfg` file on `experiments` folder for passing the hyper-parameter.
 
-Below is the content of [mv2_cpm.cfg](https://github.com/edvardHua/PoseEstimationForMobile/blob/master/training/experiments/mv2_cpm.cfg).
+Below is the content of [mv2_cpm.cfg](training/experiments/mv2_cpm.cfg).
 
 ```bash
 [Train]
 model: 'mv2_cpm'
-checkpoint: False
-datapath: '/root/hdd/ai_challenger'
-imgpath: '/root/hdd/'
+checkpoint: '/home/nishchalj/Desktop/PoseEstimationForMobile/trained/'
+datapath: '/home/nishchalj/Desktop/Foot key points/'
+imgpath: '/home/nishchalj/Desktop/Foot key points/images/'
 visible_devices: '0, 1, 2'
-multiprocessing_num: 8
+multiprocessing_num: 10
 max_epoch: 1000
-lr: '0.001'
-batchsize: 5
+lr: '0.01'
+batchsize: 10
 decay_rate: 0.95
 input_width: 192
 input_height: 192
-n_kpoints: 14
+n_kpoints: 8
 scale: 2
-modelpath: '/root/hdd/trained/mv2_cpm/models'
-logpath: '/root/hdd/trained/mv2_cpm/log'
-num_train_samples: 20000
+identify_occlusion: False
+modelpath: '/home/nishchalj/Desktop/PoseEstimationForMobile/trained/mv2_cpm_tiny/models'
+logpath: '/home/nishchalj/Desktop/PoseEstimationForMobile/trained/mv2_cpm_tiny/log'
+num_train_samples: 1200
 per_update_tensorboard_step: 500
-per_saved_model_step: 2000
-pred_image_on_tensorboard: True
+per_saved_model_step: 1000
+pred_image_on_tensorboard: False
 ```
 
 The cfg not cover all the parameters of the model, there still have some parameters in the `network_mv2_cpm.py`.
@@ -164,10 +121,6 @@ Beside, you also need to install [cocoapi](https://github.com/cocodataset/cocoap
 cd training
 python3 src/train.py experiments/mv2_cpm.cfg
 ```
-
-After 12 hour training, the model is almost coverage on 3 Nvidia 1080Ti graphics cards, below is the corresponding plot on tensorboard.
-
-![image](https://github.com/edvardHua/PoseEstimationForMobile/raw/master/images/loss_lastlayer_heat.png)
 
 ### Bechmark (PCKh)
 
@@ -370,9 +323,3 @@ CPM & Hourglass | 74 ms    | 41 ms               | 103 ms    | 118 ms     | 331 
 [5] [Repository of tf-pose-estimation](https://github.com/ildoonet/tf-pose-estimation) <br>
 [6] [Devlope guide of TensorFlow Lite](https://github.com/tensorflow/tensorflow/tree/master/tensorflow/docs_src/mobile/tflite) <br/>
 [7] [Mace documentation](https://mace.readthedocs.io)
-
-## License
-
-***
-
-[Apache License 2.0](https://github.com/edvardHua/PoseEstimationForMobile/blob/master/LICENSE)
