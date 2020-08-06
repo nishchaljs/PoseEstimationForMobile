@@ -18,21 +18,39 @@ _scale = 2
 
 
 class CocoPart(Enum):
-    Top = 0
-    Neck = 1
-    RShoulder = 2
-    RElbow = 3
-    RWrist = 4
-    LShoulder = 5
-    LElbow = 6
-    LWrist = 7
-    RHip = 8
-    RKnee = 9
-    RAnkle = 10
-    LHip = 11
-    LKnee = 12
-    LAnkle = 13
-    Background = 14
+    #nose=0
+    #neck=0
+    #r_sho=1
+    #r_elb=2
+    #r_wri=3
+    #l_sho=4
+    #l_elb=5
+    # l_wri=6
+    # r_hip=7
+    # r_knee=8
+    # r_ank=9
+    # l_hip=10
+    # l_knee=11
+    # l_ank=12
+    # r_eye=13
+    # l_eye=14
+    # r_ear=15
+    # l_ear=16
+    # l_big_toe=17
+    # l_small_toe=18
+    # l_heel=19
+    # r_big_toe=20
+    # r_small_toe=21
+    # r_heel=22
+    l_finger_small=0
+    l_finger_large=1
+    l_ankle=2
+    l_toe=3
+    r_finger_small=4
+    r_finger_large=5
+    r_ankle=6
+    r_toe=7
+    background=8
 
 
 def set_network_input_wh(w, h):
@@ -122,10 +140,9 @@ def pose_flip(meta):
     img = cv2.flip(img, 1)
 
     # flip meta
-    flip_list = [CocoPart.Top, CocoPart.Neck, CocoPart.LShoulder, CocoPart.LElbow, CocoPart.LWrist, CocoPart.RShoulder,
-                 CocoPart.RElbow, CocoPart.RWrist,
-                 CocoPart.LHip, CocoPart.LKnee, CocoPart.LAnkle, CocoPart.RHip, CocoPart.RKnee, CocoPart.RAnkle
-                 ]
+    flip_list = [CocoPart.l_finger_small,
+                 CocoPart.l_finger_large, CocoPart.l_ankle, CocoPart.l_toe, CocoPart.r_finger_small, CocoPart.r_finger_large, CocoPart.r_ankle,
+                 CocoPart.r_toe]
     adjust_joint_list = []
     for joint in meta.joint_list:
         adjust_joint = []
@@ -260,14 +277,10 @@ def pose_crop_random(meta):
 
         # check whether any face is inside the box to generate a reasonably-balanced datasets
         for joint in meta.joint_list:
-            if x <= joint[CocoPart.RKnee.value][0] < x + target_size[0] and \
-                    y <= joint[CocoPart.RKnee.value][1] < y + target_size[1] and \
-                    x <= joint[CocoPart.RAnkle.value][0] < x + target_size[0] and \
-                    y <= joint[CocoPart.RAnkle.value][1] < y + target_size[1] and \
-                    x <= joint[CocoPart.LKnee.value][0] < x + target_size[0] and \
-                    y <= joint[CocoPart.LKnee.value][1] < y + target_size[1] and \
-                    x <= joint[CocoPart.LAnkle.value][0] < x + target_size[0] and \
-                    y <= joint[CocoPart.LAnkle.value][1] < y + target_size[1]:
+            if  x <= joint[CocoPart.r_ankle.value][0] < x + target_size[0] and \
+                    y <= joint[CocoPart.r_ankle.value][1] < y + target_size[1] and \
+                    x <= joint[CocoPart.l_ankle.value][0] < x + target_size[0] and \
+                    y <= joint[CocoPart.l_ankle.value][1] < y + target_size[1]:
                 break
     return pose_crop(meta, x, y, target_size[0], target_size[1])
 

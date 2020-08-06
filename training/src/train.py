@@ -79,7 +79,7 @@ def main(argv=None):
     # load config file and setup
     params = {}
     config = configparser.ConfigParser()
-    config_file = "experiments/mv2_cpm.cfg"
+    config_file = "experiments/mv2_hourglass.cfg"
     if len(argv) != 1:
         config_file = argv[1]
     config.read(config_file)
@@ -113,7 +113,7 @@ def main(argv=None):
         config_file.replace("/", "-").replace(".cfg", "")
     )
 
-    with tf.Graph().as_default(), tf.device("/cpu:0"):
+    with tf.Graph().as_default():
         train_dataset = get_train_dataset_pipeline(params['batchsize'], params['max_epoch'], buffer_size=100)
         valid_dataset = get_valid_dataset_pipeline(params['batchsize'], params['max_epoch'], buffer_size=100)
 
@@ -142,14 +142,13 @@ def main(argv=None):
                     tower_grads.append(grads)
         else:
             # multiple gpus
-            for i in range(params['gpus']):
-                with tf.device("/gpu:%d" % i):
-                    with tf.name_scope("GPU_%d" % i):
-                        input_image, input_heat = input_iterator.get_next()
-                        loss, last_heat_loss, pred_heat = get_loss_and_output(params['model'], params['batchsize'], input_image, input_heat, reuse_variable)
-                        reuse_variable = True
-                        grads = opt.compute_gradients(loss)
-                        tower_grads.append(grads)
+            with tf.device("/gpu:0"):
+                with tf.name_scope("GPU_0"):
+                    input_image, input_heat = input_iterator.get_next()
+                    loss, last_heat_loss, pred_heat = get_loss_and_output(params['model'], params['batchsize'], input_image, input_heat, reuse_variable)
+                    reuse_variable = True
+                    grads = opt.compute_gradients(loss)
+                    tower_grads.append(grads)
 
         grads = average_gradients(tower_grads)
         for grad, var in grads:
@@ -183,7 +182,7 @@ def main(argv=None):
         config = tf.ConfigProto()
         # occupy gpu gracefully
         config.gpu_options.allow_growth = True
-        with tf.Session(config=config) as sess:
+        with tf.Session() as sess:
             init.run()
             train_handle = sess.run(train_iterator.string_handle())
             valid_handle = sess.run(valid_iterator.string_handle())
@@ -195,6 +194,8 @@ def main(argv=None):
             print("Start training...")
             for step in range(total_step_num):
                 start_time = time.time()
+                print(step)
+                print("Computing Loss")
                 _, loss_value, lh_loss = sess.run([train_op, loss, last_heat_loss],
                                                   feed_dict={handle: train_handle}
                 )
@@ -235,8 +236,8 @@ def main(argv=None):
                     print(format_str % (datetime.now(), step, loss_value, lh_loss, examples_per_sec, sec_per_batch))
 
                     # tensorboard visualization
-                    merge_op = sess.run(summary_merge_op, feed_dict={handle: valid_handle})
-                    summary_writer.add_summary(merge_op, step)
+                    #merge_op = sess.run(summary_merge_op, feed_dict={handle: valid_handle})
+                    #summary_writer.add_summary(merge_op, step)
 
                 # save model
                 if step != 0 and step % params['per_saved_model_step'] == 0:

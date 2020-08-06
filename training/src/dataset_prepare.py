@@ -58,7 +58,7 @@ class CocoPose:
 
 
 class CocoMetadata:
-    __coco_parts = 14
+    __coco_parts = 8
 
     @staticmethod
     def parse_float(four_np):
@@ -88,15 +88,24 @@ class CocoMetadata:
             ys = kp[1::3]
             vs = kp[2::3]
 
-            joint_list.append([(x, y) if v >= 1 else (-1000, -1000) for x, y, v in zip(xs, ys, vs)])
+            l=[(x, y) if v >= 1 else (-1000, -1000) for x, y, v in zip(xs, ys, vs)]
+            if(len(l)<22):
+                el=[(-1000,-1000)]*(23-len(l))
+                l=el+l
+            #print(l)
+            joint_list.append(l)
 
         self.joint_list = []
         transform = list(zip(
-            [1, 2, 4, 6, 8, 3, 5, 7, 10, 12, 14, 9, 11, 13],
-            [1, 2, 4, 6, 8, 3, 5, 7, 10, 12, 14, 9, 11, 13]
+            # [1, 7, 9, 11, 6, 8, 10, 13, 15, 17, 12, 14, 16, 3, 2, 5, 4, 18, 19, 20, 21, 22, 23],
+            # [1, 7, 9, 11, 6, 8, 10, 13, 15, 17, 12, 14, 16, 3, 2, 5, 4, 18, 19, 20, 21, 22, 23]
+            [1, 7, 6, 8, 3, 2, 5, 4],
+            [1, 7, 6, 8, 3, 2, 5, 4]
+
         ))
         for prev_joint in joint_list:
             new_joint = []
+            #print(prev_joint)
             for idx1, idx2 in transform:
                 j1 = prev_joint[idx1 - 1]
                 j2 = prev_joint[idx2 - 1]

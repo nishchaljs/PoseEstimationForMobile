@@ -24,8 +24,8 @@ import multiprocessing
 
 BASE = "/root/hdd"
 BASE_PATH = ""
-TRAIN_JSON = "ai_challenger_train.json"
-VALID_JSON = "ai_challenger_valid.json"
+TRAIN_JSON = "annotations.json"
+VALID_JSON = "annotations.json"
 
 TRAIN_ANNO = None
 VALID_ANNO = None
@@ -63,7 +63,11 @@ def _parse_function(imgId, is_train, ann=None):
     anno_ids = anno.getAnnIds(imgIds=imgId)
     img_anno = anno.loadAnns(anno_ids)
     idx = img_meta['id']
-    img_path = join(BASE, img_meta['file_name'])
+    if(anno==VALID_ANNO):
+        #print(img_meta['file_name'])
+        img_path = join('/home/nishchalj/Desktop/Foot key points/images', img_meta['file_name'])
+    else:
+        img_path = join(BASE, img_meta['file_name'])
 
     img_meta_data = CocoMetadata(idx, img_path, img_meta, img_anno, sigma=6.0)
     img_meta_data = pose_random_scale(img_meta_data)
@@ -107,7 +111,7 @@ def _get_dataset_pipeline(anno, batch_size, epoch, buffer_size, is_train=True):
 def get_train_dataset_pipeline(batch_size=32, epoch=10, buffer_size=1):
     global TRAIN_ANNO
 
-    anno_path = join(BASE_PATH, TRAIN_JSON)
+    anno_path = join('/home/nishchalj/Desktop/Foot key points/', TRAIN_JSON)
     print("preparing annotation from:", anno_path)
     TRAIN_ANNO = COCO(
         anno_path
@@ -117,7 +121,7 @@ def get_train_dataset_pipeline(batch_size=32, epoch=10, buffer_size=1):
 def get_valid_dataset_pipeline(batch_size=32, epoch=10, buffer_size=1):
     global VALID_ANNO
 
-    anno_path = join(BASE_PATH, VALID_JSON)
+    anno_path = join('/home/nishchalj/Desktop/Foot key points/', VALID_JSON)
     print("preparing annotation from:", anno_path)
     VALID_ANNO = COCO(
         anno_path

@@ -34,10 +34,10 @@ def cal_coord(pred_heatmaps, images_anno):
 
 
 def infer(frozen_pb_path, output_node_name, img_path, images_anno):
-    with tf.gfile.GFile(frozen_pb_path, "rb") as f:
-        restored_graph_def = tf.GraphDef()
+    with tf.io.gfile.GFile(frozen_pb_path, "rb") as f:
+        restored_graph_def = tf.compat.v1.GraphDef()
         restored_graph_def.ParseFromString(f.read())
-
+    
     tf.import_graph_def(
         restored_graph_def,
         input_map=None,
@@ -46,7 +46,7 @@ def infer(frozen_pb_path, output_node_name, img_path, images_anno):
     )
 
     graph = tf.get_default_graph()
-    input_image = graph.get_tensor_by_name("image:0")
+    input_image = graph.get_tensor_by_name("IteratorFromStringHandleV2:0")
     output_heat = graph.get_tensor_by_name("%s:0" % output_node_name)
 
     res = {}
@@ -81,15 +81,15 @@ if __name__ == '__main__':
     images_anno = {}
     keypoint_annos = {}
     transform = list(zip(
-        [1, 2, 4, 6, 8, 3, 5, 7, 10, 12, 14, 9, 11, 13],
-        [1, 2, 4, 6, 8, 3, 5, 7, 10, 12, 14, 9, 11, 13]
+        [1, 7, 9, 11, 6, 8, 10, 13, 15, 17, 12, 14, 16, 3, 2, 5, 4, 18, 19, 20, 21, 22, 23],
+        [1, 7, 9, 11, 6, 8, 10, 13, 15, 17, 12, 14, 16, 3, 2, 5, 4, 18, 19, 20, 21, 22, 23]
     ))
     for img_info, anno_info in zip(anno['images'], anno['annotations']):
         images_anno[img_info['id']] = img_info
-
-        prev_xs = anno_info['keypoints'][0::3]
-        prev_ys = anno_info['keypoints'][1::3]
-
+        el=[-1000]*17
+        prev_xs = el + anno_info['keypoints'][0::3]
+        prev_ys = el +anno_info['keypoints'][1::3]
+        
         new_kp = []
         for idx, idy in transform:
             new_kp.append(
